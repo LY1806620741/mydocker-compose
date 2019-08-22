@@ -1,0 +1,11 @@
+version: "2"
+services:
+  adminer:
+    image: adminer
+    ports:
+      - 80:8080
+    restart: always
+    volumes:
+      - "./blue:/var/www/html/designs/blue"
+    environment:
+      ADMINER_DESIGN: blue
