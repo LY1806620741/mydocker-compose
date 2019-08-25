@@ -1,0 +1,89 @@
+version: "2"
+ 
+services:
+  # apollo-configservice:                                         ##容器服务名
+  #   container_name: apollo-configservice                        ##容器名
+  #   build: apollobuild/apollo-configservice/                                ##Dockerfile路径
+  #   image: apollo-configservice:1.0.0                           ##镜像名
+  #   # network_mode: host                                          ##网络设置
+  #   networks:
+  #     - apollo
+  #   ports:
+  #     - "8080:8080"
+  #   volumes:
+  #     - "./apollo/logs/100003171:/opt/logs/100003171"    ##将/opt/logs/100003171目录挂载到宿主机的/docker/apollo/logs/100003171方便在宿主机上查看日志
+  #   environment:
+  #     - spring_datasource_url=jdbc:mysql://apollo-db:3306/ApolloConfigDB?characterEncoding=utf8
+  #     - spring_datasource_username=root
+  #     - spring_datasource_password=root
+  #   depends_on:
+  #     - apollo-db
+ 
+  # apollo-adminservice:
+  #   container_name: apollo-adminservice
+  #   build: apollobuild/apollo-adminservice/
+  #   image: apollo-adminservice:1.0.0
+  #   # network_mode: host
+  #   #net: "host"
+  #   networks:
+  #     - apollo
+  #   ports:
+  #     - "8090:8090"
+  #   depends_on:
+  #     - apollo-configservice
+  #   volumes:
+  #     - "./apollo/logs/100003172:/opt/logs/100003172"
+  #   environment:
+  #     - spring_datasource_url=jdbc:mysql://apollo-db:3306/ApolloConfigDB?characterEncoding=utf8
+  #     - spring_datasource_username=root
+  #     - spring_datasource_password=root
+  #   depends_on:
+  #     - apollo-db
+ 
+  # apollo-portal:
+  #   container_name: apollo-portal
+  #   build: apollobuild/apollo-portal/
+  #   image: apollo-portal:1.0.0
+  #   # network_mode: host
+  #   networks:
+  #     - apollo
+  #   #net: "host"
+  #   ports:
+  #     - "8070:8070"
+  #   depends_on:
+  #     - apollo-adminservice
+  #   volumes:
+  #     - "./apollo/logs/100003173:/opt/logs/100003173"
+  #   environment:
+  #     - spring_datasource_url=jdbc:mysql://apollo-db:3306/ApolloPortalDB?characterEncoding=utf8
+  #     - spring_datasource_username=root
+  #     - spring_datasource_password=root
+  #   depends_on:
+  #     - apollo-db
+  apollo-db:
+    image: mysql
+    build: mysql/
+    container_name: apollo-db
+    restart: always
+    networks:
+      - apollo
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./apollo/db:/var/lib/mysql:rw
+    environment:
+      # 不知道为何，我自己写的脚本只能应用2个数据库
+      - MYSQL_DATABASE=apollo_portal,apollo_config,test
+      - MYSQL_ROOT_PASSWORD=root
+  # adminer:
+  #   image: adminer
+  #   ports:
+  #     - 80:8080
+  #   restart: always
+  #   environment:
+  #     ADMINER_DESIGN: blue
+  #   networks:
+  #     - apollo
+networks:
+  apollo:
+    driver: bridge
