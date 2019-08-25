@@ -62,10 +62,8 @@ _check_config() {
 	toRun=( "$@" --verbose --help )
 	if ! errors="$("${toRun[@]}" 2>&1 >/dev/null)"; then
 		cat >&2 <<-EOM
-
 			ERROR: mysqld failed while attempting to check config
 			command was: "${toRun[*]}"
-
 			$errors
 		EOM
 		exit 1
@@ -162,7 +160,6 @@ if [ "$1" = 'mysqld' -a -z "$wantHelp" ]; then
 			-- What's done in this file shouldn't be replicated
 			--  or products like mysql-fabric won't work
 			SET @@SESSION.SQL_LOG_BIN=0;
-
 			ALTER USER 'root'@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}' ;
 			GRANT ALL ON *.* TO 'root'@'localhost' WITH GRANT OPTION ;
 			${rootCreate}
@@ -174,25 +171,10 @@ if [ "$1" = 'mysqld' -a -z "$wantHelp" ]; then
 			mysql+=( -p"${MYSQL_ROOT_PASSWORD}" )
 		fi
 
-		# file_env 'MYSQL_DATABASE'
-		# if [ "$MYSQL_DATABASE" ]; then
-		# 	echo "CREATE DATABASE IF NOT EXISTS \`$MYSQL_DATABASE\` ;" | "${mysql[@]}"
-		# 	mysql+=( "$MYSQL_DATABASE" )
-		# fi
-
 		file_env 'MYSQL_DATABASE'
-		OLD_IFS="$IFS"
-		IFS="," 
-		array=($MYSQL_DATABASE)
-		IFS="$OLD_IFS"
 		if [ "$MYSQL_DATABASE" ]; then
-			for name in ${array[@]}; do
-				if [ "$name" ]; then
-					echo $name
-					echo "CREATE DATABASE IF NOT EXISTS \`$name\` ;" | "${mysql[@]}"
-					mysql+=( "$name" )
-				fi
-			done
+			echo "CREATE DATABASE IF NOT EXISTS \`$MYSQL_DATABASE\` ;" | "${mysql[@]}"
+			mysql+=( "$MYSQL_DATABASE" )
 		fi
 
 		file_env 'MYSQL_USER'
@@ -201,12 +183,9 @@ if [ "$1" = 'mysqld' -a -z "$wantHelp" ]; then
 			echo "CREATE USER '$MYSQL_USER'@'%' IDENTIFIED BY '$MYSQL_PASSWORD' ;" | "${mysql[@]}"
 
 			if [ "$MYSQL_DATABASE" ]; then
-				for name in ${array[@]}; do
-					if [ "$name" ]; then
-					echo "GRANT ALL ON \`$name\`.* TO '$MYSQL_USER'@'%' ;" | "${mysql[@]}"
-					fi
-				done
-            fi
+				echo "GRANT ALL ON \`$MYSQL_DATABASE\`.* TO '$MYSQL_USER'@'%' ;" | "${mysql[@]}"
+			fi
+
 			echo 'FLUSH PRIVILEGES ;' | "${mysql[@]}"
 		fi
 
