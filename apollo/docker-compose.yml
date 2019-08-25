@@ -61,13 +61,12 @@ services:
       - apollo-db
   apollo-db:
     image: mysql
-    build: mysql/
-    container_name: apollo-db
     restart: always
     networks:
       - apollo
     volumes:
       - ./apollo/db:/var/lib/mysql:rw
+      - ./apollobuild/dbinit:/docker-entrypoint-initdb.d:ro
     environment:
       - MYSQL_ROOT_PASSWORD=root
 networks:

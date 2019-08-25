@@ -1,0 +1,14 @@
+version: "2"
+ 
+services:
+  mysql:
+    image: mysql
+    restart: always
+    ports:
+      - "3306:3306"
+    volumes:
+      #持久化映射
+      - ./mysql:/var/lib/mysql:rw
+      - ./init:/docker-entrypoint-initdb.d:ro
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
