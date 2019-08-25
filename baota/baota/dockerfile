@@ -1,0 +1,15 @@
+FROM centos
+
+RUN mkdir -p /www/letsencrypt \
+    && ln -s /www/letsencrypt /etc/letsencrypt \
+    && rm -f /etc/init.d \
+    && mkdir /www/init.d \
+    && ln -s /www/init.d /etc/init.d \
+    && mkdir /www/wwwroot
+RUN yum install -y wget \
+    && wget -O install.sh http://download.bt.cn/install/install.sh \
+    && echo y | sh install.sh
+
+HEALTHCHECK --interval=5s --timeout=3s CMD curl -fs http://localhost:8888/ && curl -fs http://localhost/ || exit 1 
+
+RUN bt default

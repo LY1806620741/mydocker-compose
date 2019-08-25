@@ -1,0 +1,18 @@
+version: '2.0'
+services:
+    baota:
+        build:
+            context: baota/
+        container_name: baota
+        #host模式不需要定义端口了
+        #ports:
+        #    - "8888:8888"
+        restart: always
+        command: bt start          
+        volumes:
+            - ./wwwroot/:/www/wwwroot
+        privileged: true
+        networks:
+            - host
+networks:
+    host:
