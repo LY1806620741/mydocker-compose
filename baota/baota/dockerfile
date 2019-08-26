@@ -1,14 +1,39 @@
-FROM centos
+FROM centos:7
 
+#整理环境
 RUN mkdir -p /www/letsencrypt \
     && ln -s /www/letsencrypt /etc/letsencrypt \
     && rm -f /etc/init.d \
     && mkdir /www/init.d \
     && ln -s /www/init.d /etc/init.d \
     && mkdir /www/wwwroot
-RUN yum install -y wget \
-    && wget -O install.sh http://download.bt.cn/install/install.sh \
-    && echo y | sh install.sh
+
+#宝塔安装脚本以及wget文件
+ADD ./need/wget/* ./
+#其他引导
+ADD ./need/certbot-auto.init /www/server/panel/certbot-auto
+ADD ./need/bt.init /etc/init.d/bt
+
+#增加清华源和扩展源
+RUN rm -rf /etc/yum.repos.d/*
+ADD ./need/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo
+# RUN yum install -y epel-release
+RUN yum install -y wget
+
+#yum makecache 
+# RUN yum update
+
+# RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple --upgrade pip==9.0.1
+# RUN yum install mysql-devel
+#RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple Pillow psutil chardet web.py
+# RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple Pillow==3.2.0 psutil==5.2.2 chardet==2.3.0 web.py==0.38
+# RUN easy_install -i https://pypi.tuna.tsinghua.edu.cn/simple mysql-python==1.2.5
+ 
+RUN echo y | sh install.sh
+
+#RUN rm -rf /etc/yum.repos.d/*
+
+#RUN yum clean all
 
 HEALTHCHECK --interval=5s --timeout=3s CMD curl -fs http://localhost:8888/ && curl -fs http://localhost/ || exit 1 
 
