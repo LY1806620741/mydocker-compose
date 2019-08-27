@@ -15,27 +15,17 @@ ADD ./need/certbot-auto.init /www/server/panel/certbot-auto
 ADD ./need/bt.init /etc/init.d/bt
 RUN chmod +x /etc/init.d/bt
 
-#增加清华源和扩展源
-RUN rm -rf /etc/yum.repos.d/*
+#增加清华源
 ADD ./need/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo
-# RUN yum install -y epel-release
-#RUN yum install -y wget
-
-#yum makecache 
-# RUN yum update
-
-# RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple --upgrade pip==9.0.1
-# RUN yum install mysql-devel
-#RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple Pillow psutil chardet web.py
-# RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple Pillow==3.2.0 psutil==5.2.2 chardet==2.3.0 web.py==0.38
-# RUN easy_install -i https://pypi.tuna.tsinghua.edu.cn/simple mysql-python==1.2.5
+#安装依赖
+RUN yum install -y ntp python-devel python-imaging zip unzip openssl openssl-devel gcc libxml2 libxml2-devel libxslt* zlib zlib-devel libjpeg-devel libpng-devel libwebp libwebp-devel freetype freetype-devel lsof pcre pcre-devel vixie-cron crontabs icu libicu-devel c-ares mysql-devel
+RUN unzip setuptools-33.1.1.zip && rm -f setuptools-33.1.1.zip && cd setuptools-33.1.1 && python setup.py install && cd .. && rm -rf setuptools-33.1.1 && easy_install -i https://pypi.tuna.tsinghua.edu.cn/simple pip
+RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple psutil chardet web.py virtualenv cryptography==2.1 mysql-python
  
-RUN echo y | bash install.sh
+RUN echo y | bash install.sh && rm install.sh
 
-#RUN rm -rf /etc/yum.repos.d/*
-
-#RUN yum clean all
+RUN yum clean all
 
 HEALTHCHECK --interval=5s --timeout=3s CMD curl -fs http://localhost:8888/ && curl -fs http://localhost/ || exit 1 
-
-CMD ["bash"]
+EXPOSE 8888 8888
+# CMD ["bash"]

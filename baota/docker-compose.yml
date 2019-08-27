@@ -7,11 +7,11 @@ services:
         #host模式不需要定义端口了
         #ports:
         #    - "8888:8888"
-        restart: always
-        #command: bt start          
+        restart: always        
         volumes:
             - ./wwwroot/:/www/wwwroot
         privileged: true
+        # tty: true
         networks:
             - host
 networks:
