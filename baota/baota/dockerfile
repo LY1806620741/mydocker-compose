@@ -28,4 +28,7 @@ RUN yum clean all
 
 HEALTHCHECK --interval=5s --timeout=3s CMD curl -fs http://localhost:8888/ && curl -fs http://localhost/ || exit 1 
 EXPOSE 8888 8888
-# CMD ["bash"]
+
+RUN echo -e "#!/bin/bash\nbt default\nbt start\nwhile true;do sleep 1;done" > entrypoint.sh && chmod +x entrypoint.sh
+ENTRYPOINT ["./entrypoint.sh"]
+

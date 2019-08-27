@@ -6,6 +6,7 @@ systemctl enable docker
 systemctl start docker
 cd 项目目录
 docker-compose up -d
+docker-compose logs查看密码
 或者使用
 docker run -tid --name baota --net=host --privileged=true --restart always -v ~/wwwroot:/www/wwwroot pch18/baota:clear
 
