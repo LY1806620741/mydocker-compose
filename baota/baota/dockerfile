@@ -13,12 +13,13 @@ ADD ./need/wget/* ./
 #其他引导
 ADD ./need/certbot-auto.init /www/server/panel/certbot-auto
 ADD ./need/bt.init /etc/init.d/bt
+RUN chmod +x /etc/init.d/bt
 
 #增加清华源和扩展源
 RUN rm -rf /etc/yum.repos.d/*
 ADD ./need/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo
 # RUN yum install -y epel-release
-RUN yum install -y wget
+#RUN yum install -y wget
 
 #yum makecache 
 # RUN yum update
@@ -29,7 +30,7 @@ RUN yum install -y wget
 # RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple Pillow==3.2.0 psutil==5.2.2 chardet==2.3.0 web.py==0.38
 # RUN easy_install -i https://pypi.tuna.tsinghua.edu.cn/simple mysql-python==1.2.5
  
-RUN echo y | sh install.sh
+RUN echo y | bash install.sh
 
 #RUN rm -rf /etc/yum.repos.d/*
 
@@ -37,4 +38,4 @@ RUN echo y | sh install.sh
 
 HEALTHCHECK --interval=5s --timeout=3s CMD curl -fs http://localhost:8888/ && curl -fs http://localhost/ || exit 1 
 
-RUN bt default
+CMD ["bash"]

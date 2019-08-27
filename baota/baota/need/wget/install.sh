@@ -573,9 +573,10 @@ if [ ! -d '/etc/letsencrypt' ];then
 	fi
 fi
 
-nohup bash acme_install.sh &> /dev/null &
-sleep 1
-rm -f acme_install.sh
+# 获取https证书
+# nohup bash acme_install.sh &> /dev/null &
+# sleep 1
+# rm -f acme_install.sh
 
 address=""
 address=`curl -sS --connect-timeout 10 -m 60 https://www.bt.cn/Api/getIpAddress`
