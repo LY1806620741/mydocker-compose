@@ -4,6 +4,18 @@ export PATH
 LANG=en_US.UTF-8
 is64bit=`getconf LONG_BIT`
 
+yum install -y wget
+if [ -f "/usr/bin/apt-get" ];then
+	isDebian=`cat /etc/issue|grep Debian`
+	if [ "$isDebian" != "" ];then
+		wget -O install.sh http://download.bt.cn/install/install-ubuntu_6.0.sh && bash install.sh
+		exit;
+	else
+		wget -O install.sh http://download.bt.cn/install/install-ubuntu_6.0.sh && sudo bash install.sh
+		exit;
+	fi
+fi
+
 if [ "$is64bit" != '64' ];then
 	echo "====================================="
 	echo "抱歉, 6.0不支持32位系统, 请使用64位系统或安装宝塔5.9!";
@@ -19,6 +31,44 @@ fi
 
 CN='http://125.88.182.172:5880'
 
+Install_Check(){
+	while [ "$yes" != 'yes' ] && [ "$yes" != 'n' ]
+	do
+		echo -e "----------------------------------------------------"
+		echo -e "已有Web环境，安装宝塔可能影响现有站点"
+		echo -e "Web service is alreday installed,Can't install panel"
+		echo -e "----------------------------------------------------"
+		read -p "输入yes强制安装/Enter yes to force installation (yes/n): " yes;
+	done 
+	if [ "$yes" == 'n' ];then
+		exit;
+	fi
+}
+
+Web_Service_Check(){
+	if [ -f "/etc/init.d/nginx" ]; then
+        nginxV=$(cat /etc/init.d/nginx|grep /www/server/nginx)
+        if [ "${nginxV}" = "" ];then
+        	Install_Check
+        fi
+    fi
+
+    if [ -f "/etc/init.d/httpd" ]; then
+        httpdV=$(cat /etc/init.d/httpd|grep /www/server/apache)
+        if [ "${httpdV}" = "" ];then
+        	Install_Check
+        fi
+    fi
+
+    if [ -f "/etc/init.d/mysqld" ]; then
+        mysqlV=$(cat /etc/init.d/mysqld|grep /www/server/mysql)
+        if [ "${mysqlV}" = "" ];then
+        	Install_Check
+        fi
+    fi
+}
+
+Web_Service_Check
 
 echo "
 +----------------------------------------------------------------------
@@ -32,6 +82,13 @@ echo "
 get_node_url(){
 	nodes=(http://183.235.223.101:3389 http://119.188.210.21:5880 http://125.88.182.172:5880 http://103.224.251.67 http://45.32.116.160 http://download.bt.cn);
 	i=1;
+	if [ ! -f /bin/curl ];then
+		if [ -f /usr/local/curl/bin/curl ];then
+			ln -sf /usr/local/curl/bin/curl /bin/curl
+		else
+			yum install curl -y
+		fi
+	fi
 	for node in ${nodes[@]};
 	do
 		start=`date +%s.%N`
@@ -117,6 +174,24 @@ autoSwap()
 }
 autoSwap
 
+#判断kernel-headers组件是否安装
+rpm -qa | grep kernel-headers > kernel-headers.pl
+kernelStatus=`cat kernel-headers.pl`
+#判断华为云
+huaweiLogin=`cat /etc/motd |grep 4000-955-988`
+huaweiSys=`cat /etc/redhat-release | grep ' 7.'`
+if [ "$kernelStatus" = "" ]; then
+	if [ "$huaweiLogin" != "" ] && [ "$huaweiSys" != "" ]; then
+		wget $download_Url/src/kernel-headers-3.10.0-514.el7.x86_64.rpm
+		rpm -ivh kernel-headers-3.10.0-514.el7.x86_64.rpm
+		rm -f kernel-headers-3.10.0-514.el7.x86_64.rpm
+	else
+		yum install kernel-headers -y
+	fi
+fi
+rm -f kernel-headers.pl
+
+yum install ntp -y
 rm -rf /etc/localtime
 ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 
@@ -131,10 +206,198 @@ fi
 ntpdate 0.asia.pool.ntp.org
 startTime=`date +%s`
 setenforce 0
-# python3.4 pip3
+sed -i 's/SELINUX=enforcing/SELINUX=disabled/' /etc/selinux/config
+for pace in python-devel python-imaging zip unzip openssl openssl-devel gcc libxml2 libxml2-devel libxslt* zlib zlib-devel libjpeg-devel libpng-devel libwebp libwebp-devel freetype freetype-devel lsof pcre pcre-devel vixie-cron crontabs icu libicu-devel c-ares;
+do
+	yum -y install ${pace}; 
+done
+
+if [ -f "/usr/bin/dnf" ]; then
+	dnf install -y redhat-rpm-config
+fi
+yum install python-devel -y
+
+py26=$(python -V 2>&1|grep '2.6.')
+if [ "$py26" != "" ];then
+	if [ ! -f /etc/yum.repos.d/epel.repo ];then
+		wget -O /etc/yum.repos.d/epel.repo http://mirrors.aliyun.com/repo/epel-7.repo
+	fi
+    if [ ! -f /usr/bin/python3 ];then
+		yum install python34 python34-devel -y
+		if [ ! -f /usr/bin/python3 ];then
+			echo "python3.4 install error!"
+			exit 0;
+		fi
+		isSed=$(cat /usr/bin/yum|grep /usr/bin/python2.6)
+		if [ "$isSed" == "" ];then
+			sed -i "s#/usr/bin/python#/usr/bin/python2.6#" /usr/bin/yum
+		fi
+		#rm -f /usr/bin/python2
+		mv -f /usr/bin/python /usr/bin/python2_backup
+		ln -sf /usr/bin/python3 /usr/bin/python
+	fi
+	if [ ! -f /usr/bin/pip3 ];then
+		wget --no-check-certificate https://bootstrap.pypa.io/get-pip.py
+		python3 get-pip.py
+		mv -f /usr/bin/pip /usr/bin/pip_backup 
+		ln -sf /usr/bin/pip3.4 /usr/bin/pip
+	fi
+fi
 
 tmp=`python -V 2>&1|awk '{print $2}'`
 pVersion=${tmp:0:3}
+
+Install_setuptools()
+{
+	if [ ! -f "/usr/bin/easy_install" ];then
+		wget -O setuptools-33.1.1.zip $download_Url/install/src/setuptools-33.1.1.zip -T 10
+		unzip setuptools-33.1.1.zip
+		rm -f setuptools-33.1.1.zip
+		cd setuptools-33.1.1
+		python setup.py install
+		cd ..
+		rm -rf setuptools-33.1.1
+	fi
+	
+	if [ ! -f "/usr/bin/easy_install" ];then
+		echo '=================================================';
+		echo -e "\033[31msetuptools installation failed. \033[0m";
+		exit;
+	fi
+}
+
+Install_pip()
+{
+	ispip=`pip -V |grep from`
+	if [ "$ispip" == "" ];then
+		if [ ! -f "/usr/bin/easy_install" ];then
+			Install_setuptools
+		fi
+		wget -O pip-9.0.1.tar.gz $download_Url/install/src/pip-9.0.1.tar.gz -T 10
+		tar xvf pip-9.0.1.tar.gz
+		rm -f pip-9.0.1.tar.gz
+		cd pip-9.0.1
+		python setup.py install
+		cd ..
+		rm -rf pip-9.0.1
+	fi
+	ispip=`pip -V |grep from`
+	if [ "$ispip" = "" ];then
+		echo '=================================================';
+		echo -e "\033[31m Python-pip installation failed. \033[0m";
+		exit;
+	fi
+	
+	pip install -U pip
+}
+
+Install_Pillow()
+{
+	isSetup=`python -m PIL 2>&1|grep package`
+	if [ "$isSetup" = "" ];then
+		isFedora = `cat /etc/redhat-release |grep Fedora`
+		if [ "$isFedora" != "" ];then
+			pip install Pillow
+			return;
+		fi
+		wget -O Pillow-3.2.0.zip $download_Url/install/src/Pillow-3.2.0.zip -T 10
+		unzip Pillow-3.2.0.zip
+		rm -f Pillow-3.2.0.zip
+		cd Pillow-3.2.0
+		python setup.py install
+		cd ..
+		rm -rf Pillow-3.2.0
+	fi
+	
+	isSetup=`python -m PIL 2>&1|grep package`
+	if [ "$isSetup" = "" ];then
+		echo '=================================================';
+		echo -e "\033[31mPillow installation failed. \033[0m";
+		exit;
+	fi
+}
+
+Install_psutil()
+{
+	isSetup=`python -m psutil 2>&1|grep package`
+	if [ "$isSetup" = "" ];then
+		wget -O psutil-5.2.2.tar.gz $download_Url/install/src/psutil-5.2.2.tar.gz -T 10
+		tar xvf psutil-5.2.2.tar.gz
+		rm -f psutil-5.2.2.tar.gz
+		cd psutil-5.2.2
+		python setup.py install
+		cd ..
+		rm -rf psutil-5.2.2
+	fi
+	isSetup=`python -m psutil 2>&1|grep package`
+	if [ "$isSetup" = "" ];then
+		echo '=================================================';
+		echo -e "\033[31mpsutil installation failed. \033[0m";
+		exit;
+	fi
+}
+
+Install_mysqldb()
+{
+	isSetup=`python -m MySQLdb 2>&1|grep package`
+	if [ "$isSetup" = "" ];then
+		wget -O MySQL-python-1.2.5.zip $download_Url/install/src/MySQL-python-1.2.5.zip -T 10
+		unzip MySQL-python-1.2.5.zip
+		rm -f MySQL-python-1.2.5.zip
+		cd MySQL-python-1.2.5
+		python setup.py install
+		cd ..
+		rm -rf MySQL-python-1.2.5
+	fi
+}
+
+Install_chardet()
+{
+	isSetup=`python -m chardet 2>&1|grep package`
+	if [ "$isSetup" = "" ];then
+		wget -O chardet-2.3.0.tar.gz $download_Url/install/src/chardet-2.3.0.tar.gz -T 10
+		tar xvf chardet-2.3.0.tar.gz
+		rm -f chardet-2.3.0.tar.gz
+		cd chardet-2.3.0
+		python setup.py install
+		cd ..
+		rm -rf chardet-2.3.0
+	fi	
+	
+	isSetup=`python -m chardet 2>&1|grep package`
+	if [ "$isSetup" = "" ];then
+		echo '=================================================';
+		echo -e "\033[31mchardet installation failed. \033[0m";
+		exit;
+	fi
+}
+
+Install_webpy()
+{
+	isSetup=`python -m web 2>&1|grep package`
+	if [ "$isSetup" = "" ];then
+		wget -O web.py-0.38.tar.gz $download_Url/install/src/web.py-0.38.tar.gz -T 10
+		tar xvf web.py-0.38.tar.gz
+		rm -f web.py-0.38.tar.gz
+		cd web.py-0.38
+		python setup.py install
+		cd ..
+		rm -rf web.py-0.38
+	fi
+	
+	isSetup=`python -m web 2>&1|grep package`
+	if [ "$isSetup" = "" ];then
+		echo '=================================================';
+		echo -e "\033[31mweb.py installation failed. \033[0m";
+		exit;
+	fi
+}
+
+
+Install_setuptools
+Install_pip
+
+curl -Ss --connect-timeout 3 -m 60 http://download.bt.cn/install/pip_select.sh|bash
 
 isPsutil=`python -m psutil 2>&1|grep package`
 if [ "$isPsutil" != "" ];then
@@ -144,7 +407,10 @@ if [ "$isPsutil" != "" ];then
 	fi
 fi
 
+yum install libffi-devel -y
 pip install --upgrade setuptools
+pip install -U pip
+pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
 pip install six --upgrade --ignore-installed six
 pip install itsdangerous==0.24
 pip install paramiko==2.0.2
@@ -172,12 +438,16 @@ if [ "$is_gevent" = "" ];then
 fi
 
 pip install psutil chardet virtualenv Flask Flask-Session Flask-SocketIO flask-sqlalchemy Pillow gunicorn gevent-websocket paramiko requests cryptography pyopenssl
+Install_Pillow
+Install_psutil
 
 pip install gunicorn
 
 if [  -f /www/server/mysql/bin/mysql ]; then
 	pip install mysql-python
+	Install_mysqldb
 fi
+Install_chardet
 
 mkdir -p $setup_path/server/panel/logs
 mkdir -p $setup_path/server/panel/vhost/apache
@@ -196,6 +466,12 @@ mkdir -p /www/backup/database
 mkdir -p /www/backup/site
 chmod 755 /www/wwwroot
 
+if [ ! -f "/usr/bin/unzip" ];then
+	#rm -f /etc/yum.repos.d/epel.repo
+	yum install unzip -y
+fi
+wget -O panel.zip $download_Url/install/src/panel6.zip -T 10
+wget -O /etc/init.d/bt $download_Url/install/src/bt6.init -T 10
 if [ -f "$setup_path/server/panel/data/default.db" ];then
 	if [ -d "/$setup_path/server/panel/old_data" ];then
 		rm -rf $setup_path/server/panel/old_data
@@ -310,6 +586,9 @@ if [ "${isVersion}" == '' ];then
 		firewall-cmd --reload
 	fi
 fi
+
+pip install psutil chardet psutil virtualenv cryptography==2.1 > /dev/null 2>&1
+
 if [ ! -d '/etc/letsencrypt' ];then
 	yum install epel-release -y
 
@@ -327,6 +606,11 @@ if [ ! -d '/etc/letsencrypt' ];then
 		chmod 600 /var/spool/cron/root
 	fi
 fi
+
+wget -O acme_install.sh $download_Url/install/acme_install.sh
+nohup bash acme_install.sh &> /dev/null &
+sleep 1
+rm -f acme_install.sh
 
 address=""
 address=`curl -sS --connect-timeout 10 -m 60 https://www.bt.cn/Api/getIpAddress`

@@ -10,28 +10,13 @@ RUN mkdir -p /www/letsencrypt \
 
 #宝塔安装脚本以及wget文件
 ADD ./need/wget/* ./
-#其他引导
-ADD ./need/bt.init /etc/init.d/bt
-RUN chmod +x /etc/init.d/bt
 
 #增加清华源
-RUN rm -f /etc/yum.repos.d/*
 ADD ./need/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo
-#安装epel依赖
-RUN yum install -y epel-release \
-    && sed -i "s/http:\/\/download.fedoraproject.org\/pub/https:\/\/mirrors.tuna.tsinghua.edu.cn/g" /etc/yum.repos.d/epel.repo \
-    && sed -i "s/^#//g" /etc/yum.repos.d/epel.repo \
-    && sed -i -e "s/^mirrorlist/#mirrorlist/g" -e "s/^metalink/#metalink/g" /etc/yum.repos.d/epel.repo
-#安装rpm依赖 没有vixie-cron用cronie或crontabs
-RUN yum install -y ntp python36 python36-devel python36-pip libffi-devel unzip python-devel python-imaging openssl openssl-devel gcc libxml2-devel libxslt* zlib-devel libjpeg-devel libpng-devel libwebp libwebp-devel freetype freetype-devel lsof pcre-devel crontabs icu libicu-devel c-ares crontabs
-#mv python-devel
-RUN ln -sf /usr/bin/python3 /usr/bin/python \
-    && pip3.6 install -i https://pypi.tuna.tsinghua.edu.cn/simple pip -U \
-    && pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
  
-RUN echo y | bash install.sh && rm install.sh
+RUN echo y | bash install.sh
 
-# RUN yum clean all
+RUN yum clean all
 
 HEALTHCHECK --interval=5s --timeout=3s CMD curl -fs http://localhost:8888/ && curl -fs http://localhost/ || exit 1 
 EXPOSE 8888 8888
