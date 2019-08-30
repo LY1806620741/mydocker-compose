@@ -1,8 +1,7 @@
 version: '2.0'
 services:
     baota:
-        build:
-            context: baota/
+        image: pch18/baota:clear
         container_name: baota
         restart: always        
         volumes:
