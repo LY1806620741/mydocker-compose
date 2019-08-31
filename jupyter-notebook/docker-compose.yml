@@ -1,6 +1,6 @@
 version: "2"
 services:
-    jenkins:
+    jupyter:
         image: jupyter/base-notebook
         ports:
             - "8888:8888"
