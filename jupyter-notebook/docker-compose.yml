@@ -1,7 +1,7 @@
-version: "2"
+version: '2.0'
 services:
     jupyter:
-        image: jupyter/base-notebook
-        ports:
-            - "8888:8888"
+        build: jupyter-centos-flexible/
+        container_name: jupyter
         restart: always
+        network_mode: "host"
