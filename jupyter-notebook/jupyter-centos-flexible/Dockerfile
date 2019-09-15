@@ -22,6 +22,9 @@ ARG NB_GID="100"
 RUN useradd -m -s /bin/bash -N -u $NB_UID $NB_USER \
     && echo $NB_USER" ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
+#暴露端口
+EXPOSE 8888
+
 #运行使用用户根目录作为工作盘
 USER $NB_USER
-ENTRYPOINT jupyter-notebook --notebook-dir="/home/`whoami`"
+CMD jupyter-notebook --ip=0.0.0.0 --notebook-dir="/home/`whoami`"

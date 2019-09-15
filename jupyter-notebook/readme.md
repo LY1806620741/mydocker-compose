@@ -7,6 +7,8 @@ jupyter python3.6 基础镜像
 查看日志获取登录token
 ```docker-compose logs``
 浏览器访问,直接用tokenurl可以直接验证，也可以访问首页使用token修改密码，以后用密码访问
+2. docker
+docker run --name jupyter-flexible -p 8888:8888 jieshao/jupyter:flexible
 # 关于数据持久化
 因为docker存在普通用户目录映射到宿主机root没有权限的问题，所以没有volume到本地文件夹
 1. 可以用jupyter terminal打包再进行下载
