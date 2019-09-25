@@ -1,0 +1,8 @@
+version: '2.0'
+services:
+    ssh:
+        build: build/
+        image: jieshao/sshserver
+        restart: always
+        ports:
+          - "22:22"
