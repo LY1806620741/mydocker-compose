@@ -1,0 +1,9 @@
+version: '2.0'
+services:
+    node:
+        build: build/
+        image: jieshao/nodedev
+        restart: always
+        ports:
+          - "1024:22"
+          - "8080:8080"
