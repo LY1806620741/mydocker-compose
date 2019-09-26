@@ -16,3 +16,10 @@ Host localhost
 ```
 ## Vscode
 vscode安装remote ssh工具就可以了,开发的页面用8080端口访问
+需要配置~/.ssh/config
+```
+Host nodedev
+   User root
+   HostName localhost
+   Port 1024
+```
