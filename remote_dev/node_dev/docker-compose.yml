@@ -7,3 +7,8 @@ services:
         ports:
           - "1024:22"
           - "8080:8080"
+        networks:
+          - gogs_default
+networks:
+  gogs_default:
+    external: true

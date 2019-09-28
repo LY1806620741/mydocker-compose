@@ -13,6 +13,13 @@
 docker build --no-cache
 docker-compose build --no-cache
 
+# Docker网络相关
+    docker network ls //查看网络
+    docker network inspect gogs_default //查看详情
+    docker network disconnect gogs_default gogs//从gogs默认网络断开gogs实例
+    docker network connect newnetwork gogs//gogs实例连接新网络 --ip指定ip 其他的看官网
+    ​内置DNS服务器127.0.0.11,127.0.0.11的53端口的dns请求，被转发到了docker containerd进程上
+
 # Curl查询
 curl -X GET --connect-timeout 10 {url}|python -m json.tool
 ## 页面
