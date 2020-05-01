@@ -6,3 +6,13 @@ services:
     ports:
       - "9092:9092"
       - "9001:9001"
+    expose:
+      - "2181"
+  zkui:
+    image: maauso/zkui #username admin password manager
+    ports:
+      - "9090:9090"
+    links:
+      - kafka:kafka
+    environment:
+     - ZKLIST=kafka:2181
