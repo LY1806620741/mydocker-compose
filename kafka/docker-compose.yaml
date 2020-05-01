@@ -1,0 +1,8 @@
+version: "2.0"
+services:
+  kafka:
+    image: kafka
+    build: kafkabuild/
+    ports:
+      - "9092:9092"
+      - "9001:9001"
