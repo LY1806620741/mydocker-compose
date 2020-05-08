@@ -1,0 +1,20 @@
+# 默认配置
+
+* pgadmin
+  * 端口 8080
+  * 用户名 1806620741@qq.com
+  * 密码 123456
+* sonar
+  * 端口9000
+  * 用户密码admin/admin
+
+# 查看配置
+`docker-compose config`
+
+# 运行
+`docker-compose up -d`
+
+#其他
+* 宿主机可能要开启`sysctl -w vm.max_map_count=2621441`
+* pgadmin连接postgres使用host postgres,user/pass sonar/sonar
+* sonarqube汉化,web界面选择Administration->Marketplace->搜索Chinese Pack->安装->Restart Server
