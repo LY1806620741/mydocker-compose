@@ -1,0 +1,7 @@
+version: "2.0"
+services:
+  supervisord:
+    image: supervisord
+    build: supervisordbuild/
+    expose:
+      - "9001"
